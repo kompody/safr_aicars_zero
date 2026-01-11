@@ -29,10 +29,21 @@ Celkově byla integrace mechanismu rychlého ukládání a načítání velmi bo
 
 ---
 
-## Slide 5. Model č. 3 – Neuronová síť (MLP: funkční řešení)
+## Slide 5. Model č. 3 – Neuronová síť (MLP: funkční řešení a speciální optimalizace)
 
-Třetí přístup – vícevrstvý perceptron (MLP, `AI_engines/AIbrain_Zero.py`). Vstup: 9 senzorů a rychlost, první skrytá vrstva má 24 neuronů s ReLU, druhá má 16 (opět ReLU). Výstup: 4 sigmoidové hodnoty – plyn, brzda, vlevo, vpravo. Pro aktivaci akce (>0.5) platí speciální logika: brzda a plyn, případně vlevo a vpravo, nemohou být aktivní zároveň.  
-Zpočátku učení nešlo dobře: pouze mutace vedly k tomu, že agent zůstával u startu. Zavedením backpropagation a policy gradientu se učení výrazně zrychlilo – auta zvládla i nové tratě.
+Třetí přístup – vícevrstvý perceptron (MLP, `AI_engines/AIbrain_Zero.py`). Vstup: 9 paprskových senzorů a rychlost; první skrytá vrstva má 24 neuronů (ReLU), druhá 16 (ReLU). Výstup: 4 hodnoty (plyn, brzda, vlevo, vpravo) se sigmoid aktivací. Akce je aktivní při >0.5, ale pomocná logika zajišťuje, že plyn a brzda, případně levý a pravý směr, nemohou být aktivované současně.
+
+Pro optimalizaci ovládání a zvládání zatáček jsme implementovali několik mechanismů přímo v `AIbrain_Zero.py`:
+
+- **Dynamické určení “otáčkového režimu”** – síť zpracovává informace o průměrné vzdálenosti vlevo/vpravo, porovná rozdíl (“balance”) a podle prahu pozná, kdy je potřeba výrazněji zatočit. Pokud agent detekuje ostrý rozdíl, sníží se cílová rychlost a priorita přechází na plynulé bezpečné projetí, nikoli maximální rychlost ("target speed turn" vs. "target speed straight").
+- **Prevence srážky s hranou** – pokud je vzdálenost od stěny menší než určený práh, aktivuje se brzda nebo se diferencuje řízení na opačnou stranu. Při detekci kritické blízkosti agent omezí plyn a nuceně zatočí od překážky.
+- **Automatické škálování paprsků** – normalizace hodnot paprsků podle reálného maxima na mapě, aby síť nezávisela na konkrétní scéně a lépe rozeznávala situace v různých prostředích.
+- **Bezpečnostní “coasting”** – pokud je vpředu volno, plyn se zvýší, při hrozbě srážky je rychle aktivována brzda a vypnut plyn.
+- **Policy gradient pro efektivní učení** – akce nejsou pouze mutované, ale učí se pomocí zpětné vazby z dosažených odměn, což výrazně urychluje adaptaci.
+- **Oddělení plynu a brzdy, rozdělení směrových akcí** – plyn s brzdou a levý/pravý nesmí být současně → síť je k tomu vedená speciální maskovací/mutující funkcí v rozhodovací logice.
+
+Díky těmto mechanizmům se agent naučil nejen rychle projíždět rovinky, ale hlavně adaptovat své chování v ostrých zatáčkách a vyhýbat se překážkám bez zbytečných srážek.
+
 
 ---
 
