@@ -164,6 +164,8 @@ Vizuálně:
 
 - MLP: nejlepší rovnováha kvality a stability, snadno se rozšiřuje a trénuje.
 
+![[finish.png]]
+
   
 
 ---
